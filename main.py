@@ -2,6 +2,7 @@
 
 import requests
 import time
+import sys
 
 set_code = input("Three-letter set code: ")
 print(set_code)
@@ -41,11 +42,15 @@ while not pull_complete:
     page_number = page_number + 1
     print("Processing page {}".format(page_number))
     # Loop to get non-foil prices
-    for data in card_list['data']:
-        if data['nonfoil']:
-            cards['nonfoil'][data['rarity']]['card_value'] = cards['nonfoil'][data['rarity']]['card_value'] \
-                                                             + float(data['prices']['usd'])
-            cards['nonfoil'][data['rarity']]['card_count'] = cards['nonfoil'][data['rarity']]['card_count'] + 1
+    try:
+        for data in card_list['data']:
+            if data['nonfoil']:
+                cards['nonfoil'][data['rarity']]['card_value'] = cards['nonfoil'][data['rarity']]['card_value'] \
+                                                                 + float(data['prices']['usd'])
+                cards['nonfoil'][data['rarity']]['card_count'] = cards['nonfoil'][data['rarity']]['card_count'] + 1
+    except KeyError:
+        print("It appears this key does not exist")
+        sys.exit(1)
     # Loop to get foil prices
     for data in card_list['data']:
         if data['foil'] and data['prices']['usd_foil'] is not None:
@@ -61,10 +66,16 @@ while not pull_complete:
 
 print('Foil Values')
 for k, v in cards['foil'].items():
-    avg_value = v['card_value']/v['card_count']
+    try:
+        avg_value = v['card_value']/v['card_count']
+    except ZeroDivisionError:
+        avg_value = 0
     print('{}: {} {} {}'.format(k, v['card_count'], round(v['card_value'], 2), round(avg_value, 2)))
 
 print('Nonfoil Values')
 for k, v in cards['nonfoil'].items():
-    avg_value = v['card_value']/v['card_count']
+    try:
+        avg_value = v['card_value']/v['card_count']
+    except ZeroDivisionError:
+        avg_value = 0
     print('{}: {} {} {}'.format(k, v['card_count'], round(v['card_value'], 2), round(avg_value, 2)))
